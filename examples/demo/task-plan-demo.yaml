@@ -1,0 +1,24 @@
+# 计划模式任务包示例（2026-09-05）：单员工任务链 dev→test→commit→devops
+# plan 与 tasks 互斥；kind 查能力注册表（缺省 dev）；verify 由执行器亲自运行核对
+taskId: demo-plan-login
+title: 登录功能全链交付
+repo: { url: "http://localhost:3000/demo/web-app.git", branch: develop, baseBranch: main }
+role: backend
+plan:
+  - id: t1
+    title: 开发登录接口与页面
+    detail: 实现 POST /api/login 与前端登录表单，含单元测试
+    verify: npm run build
+  - id: t2
+    kind: test
+    title: e2e 测试登录流程
+    detail: 覆盖正确/错误密码、锁定策略
+    verify: npm run e2e
+  - id: t3
+    kind: commit
+    title: 提交代码并建 MR
+    detail: 提交 feature/demo-login 分支并建 MR 至 develop
+  - id: t4
+    kind: devops
+    title: 发布到测试环境
+    detail: 部署 test 环境并确认部署完成

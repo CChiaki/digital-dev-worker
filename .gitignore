@@ -1,0 +1,36 @@
+# ===== 敏感配置（绝不入库）=====
+# 本机/生产运行时配置：含模型网关地址、渠道 token、GitLab PAT 等凭据（支持 enc:v1: 密文）
+runtime-local.yaml
+# 密钥与凭据产物
+*.key
+.env
+.env.*
+
+# ===== 运行期数据 =====
+# sqlite 库文件、审计链落盘、workspace / sessions（见部署手册 §0 数据归属）
+data/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+audit-heads.jsonl
+.superpowers/
+
+# ===== 离线分发包（构建产物，见部署手册 §7）=====
+dist-offline/
+
+# ===== 依赖与构建 =====
+node_modules/
+pnpm-store/
+coverage/
+*.tsbuildinfo
+
+# ===== 内部文档（开源发布排除，见 docs/internal/README.md）=====
+docs/internal/
+
+# ===== 日志与临时文件 =====
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.claude/

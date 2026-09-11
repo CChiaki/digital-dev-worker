@@ -1,0 +1,21 @@
+# 一键演示 · 任务包 1/2（P16）：后端接口（分派给小数，shadow 盯梢期——节点申报阻塞等人工放行）
+# 现场亮点：调度器按岗位自动分派 → 直播看员工干活 → 人工放行 → 下游任务自动跟上
+taskId: TASK-DEMO-001-BACKEND
+title: 消息通知服务端接口（演示：盯梢放权）
+role: backend
+repo:
+  url: http://gitlab.inner.bank/demo/notification-center.git
+  branch: feature/demo-backend
+  baseBranch: develop
+tasks:
+  - id: T-1
+    title: 通知接口开发
+    files:
+      - src/api/notification.ts
+    requirement: 实现站内信通知接口，按 apiDocs 契约返回
+    acceptance:
+      - 接口自测通过
+      - 节点验收清单逐项确认
+apiDocs: http://gitlab.inner.bank/api-docs/notification.md
+codingStandard: 遵循仓库 ESLint 配置与团队规范
+reportChannel: 完成后在 MR 描述附演示说明

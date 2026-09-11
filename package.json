@@ -1,0 +1,14 @@
+{
+  "name": "digital-dev-worker",
+  "private": true,
+  "scripts": {
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "dev:api": "node --import ./packages/console-api/src/team/ts-register.mjs packages/console-api/src/cli.ts --runtime runtime-local.yaml",
+    "dev:web": "pnpm --filter console dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.1"
+  }
+}

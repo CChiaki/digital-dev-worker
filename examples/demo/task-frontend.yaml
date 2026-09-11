@@ -1,0 +1,21 @@
+# 一键演示 · 任务包 2/2（P16）：前端联调（分派给小智；依赖后端任务包——班组依赖编排）
+taskId: TASK-DEMO-002-FRONTEND
+title: 消息通知页面联调（演示：班组协作）
+role: frontend
+dependsOn:
+  - TASK-DEMO-001-BACKEND
+repo:
+  url: http://gitlab.inner.bank/demo/notification-center.git
+  branch: feature/demo-frontend
+  baseBranch: develop
+tasks:
+  - id: T-1
+    title: 通知页面对接
+    files:
+      - src/views/notification/index.vue
+    requirement: 对接后端通知接口，完成消息列表与已读
+    acceptance:
+      - 页面联调通过
+apiDocs: http://gitlab.inner.bank/api-docs/notification.md
+codingStandard: 遵循仓库 ESLint 配置与团队规范
+reportChannel: 完成后在 MR 描述附演示说明

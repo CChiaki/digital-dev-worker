@@ -1,0 +1,36 @@
+# 任务计划：数字员工 AI 网站开发与发布（dev → test → commit → devops 四项全链）
+# 提交方式：管理端「任务创建」yaml 直贴，或 POST /api/tasks（需先启动控制台）
+taskId: ai-site-digital-employee
+title: 数字员工 AI 网站开发与发布
+repo: { url: "http://localhost:3000/admin/dome.git", branch: main }
+role: frontend
+plan:
+  - id: t1
+    kind: dev
+    title: 设计并开发数字员工 AI 网站首页
+    detail: |
+      在仓库根新增 index.html（单页网站），设计一个数字员工（数字AI研发人员）的 AI 产品介绍站：
+      1. 内容板块：产品定位（等同正式员工的数字研发人员）、能力卡片（开发/测试/提交/发布全链路自主交付）、
+         盯梢→放权机制说明、银行内网完全离线部署优势、汇报与审计透明；
+      2. 风格：现代 AI 产品视觉（渐变主视觉、卡片式布局、响应式），中文文案；
+      3. 内网约束：无任何外部 CDN/字体/JS 依赖（样式内联或同目录 css/js），离线可直接打开；
+      4. 完成后将可发布产物放入 dist/ 目录（dist/index.html 及配套静态资源）。
+    verify: test -f dist/index.html
+  - id: t2
+    kind: test
+    title: 自测页面
+    detail: |
+      逐项自查并作为 task_check 申报证据：
+      1. HTML 结构完整（html/head/body 均闭合）、meta charset 为 utf-8；
+      2. 所有 css/js/图片引用均为仓库内相对路径（无外链，离线可开）；
+      3. 中文文案无乱码、无明显错别字；
+      4. dist/index.html 非空且体积合理。
+    verify: test -s dist/index.html
+  - id: t3
+    kind: commit
+    title: 提交代码到 main 分支
+    detail: 将 index.html 与 dist/ 产物提交到 main 分支并推送，commit message 用中文说明本次交付内容。
+  - id: t4
+    kind: devops
+    title: 发布到本机 nginx 并重启
+    detail: 将产物发布到 web 环境（目标目录 /var/www/html），发布完成后执行重启脚本 reload.sh 使页面生效。

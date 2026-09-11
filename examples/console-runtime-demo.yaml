@@ -1,0 +1,37 @@
+# 一键演示运行时配置（P16）：2 名 shadow 盯梢期员工 + 模型路由
+# 现场演示接真实集群（替换 <key>）；网络兜底用 scripts/demo.mjs --mock（faux 预设回复，不依赖集群）
+profiles:
+  - id: demo-backend
+    name: 小数
+    role: backend
+    skills: [backend, test]   # 兼容保留（2026-09-08 起调度按 role 精确匹配，skills 不再参与分派）
+    supervision:
+      level: shadow        # 演示亮点：节点申报阻塞 → 现场人工放行
+  - id: demo-frontend
+    name: 小智
+    role: frontend
+    skills: [frontend]
+    supervision:
+      level: shadow
+
+routes:
+  - callType: chat
+    primary: { name: 主力对话模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+  - callType: code
+    primary: { name: 代码模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+  - callType: review
+    primary: { name: 评审模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+  - callType: test
+    primary: { name: 测试模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+
+workspaceRoot: ./workspace
+sessionsRoot: ./sessions
+tickIntervalMs: 3000          # 演示用：分派更跟手
+bashWhitelist: [git, node, npm, npx, python3]
+
+# 代码托管协作（可选）：配置后员工获得 建分支/提交文件/建 MR/查 MR/查文件 工具，
+# defaultRepo 由任务包 repo.url 自动推导（repo.url 指向本地托管地址即可）。本地演示见 docs/本地演示环境搭建.md。
+# forge:
+#   provider: gitea                   # gitea | gitlab（缺省 gitlab）
+#   baseUrl: http://localhost:3000    # 服务根地址（API 前缀按 provider 自动拼接）
+#   token: "<pat 或 enc:v1:...>"      # Personal Access Token（write:repository scope），支持 enc:v1: 密文

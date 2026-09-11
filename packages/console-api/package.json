@@ -1,0 +1,32 @@
+{
+  "name": "@ddw/console-api",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "start": "node src/cli.ts"
+  },
+  "dependencies": {
+    "@ddw/mcp-gitlab": "workspace:*",
+    "@ddw/runtime": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "mysql2": "^3.24.3",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@ddw/mcp-browser": "workspace:*",
+    "@ddw/mcp-ci": "workspace:*",
+    "@ddw/mcp-deploy": "workspace:*",
+    "@ddw/mcp-gitlab": "workspace:*",
+    "@ddw/mcp-jira": "workspace:*",
+    "@ddw/mcp-testenv": "workspace:*",
+    "@earendil-works/pi-agent-core": "0.84.4",
+    "@earendil-works/pi-ai": "0.84.4",
+    "@types/node": "^26.4.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.1"
+  }
+}

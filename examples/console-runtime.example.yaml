@@ -1,0 +1,128 @@
+# 控制台一体化运行时配置样例（CLI: node dist/cli.js --runtime examples/console-runtime.example.yaml）
+# 数字员工名册 + 模型路由 + 工作区；提供后控制台进入一体化模式（调度器自动分派）
+
+profiles:
+  - id: emp-01
+    name: 小数
+    role: backend
+    skills: [backend, test]  # 兼容保留（2026-09-08 起调度按 role 精确匹配，skills 不再参与分派）
+    supervision:
+      # 盯梢三级（2026-09-11 等级放权）：shadow 盯梢期 = 节点申报 + 白名单外命令均挂人工放行；
+      # assisted 辅助期 = 仅白名单外命令挂审；trusted 信任期 = 白名单外命令直接执行。
+      # 黑名单（sudo/rm -rf/公网外呼）与组合命令三等级均硬拒
+      level: shadow
+  - id: emp-02
+    name: 小智
+    role: frontend
+    skills: [frontend]
+    supervision:
+      level: shadow
+  - id: emp-03
+    name: 小验
+    role: test
+    skills: [test]
+    supervision:
+      level: shadow
+
+routes:                      # 私有化模型集群（OpenAI 兼容协议）
+  # apiKey 明文/密文两用：生产建议密文落盘——
+  #   export DDW_CRED_KEY=$(node dist/cli.js cred key)   # 主密钥注入环境变量，不落盘
+  #   node dist/cli.js cred enc '<真实apiKey>'            # 输出 enc:v1:... 替换下方 <key>
+  # 解密失败（缺 DDW_CRED_KEY / 错 key / 篡改）= 启动即失败
+  #   primary 里可加可选字段 api: openai-completions | anthropic-messages（缺省 openai-completions，
+  #   行内 OpenAI 兼容集群不用填；Anthropic 协议端点如智谱 /api/anthropic 填 anthropic-messages；
+  #   fallback 同样支持 api 字段（跨协议 fallback，如 openai 主力 + anthropic 备用））
+  #   primary/fallback 里可加可选字段 timeoutMs（2026-09-11 模型调用墙钟超时，缺省 120000）：
+  #   模型 hang/断流到点中止——先原模型自动重试 1 次，再切 fallback；长链推理模型可按需放大
+  - callType: chat
+    primary: { name: 主力对话模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+  - callType: code
+    primary: { name: 代码模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash, timeoutMs: 180000 }
+    fallback: { name: 备用代码模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: qwen3.8-27b }
+  - callType: review
+    primary: { name: 评审模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+  - callType: test
+    primary: { name: 测试模型, baseUrl: http://model-cluster.inner.bank/v1, apiKey: "<key 或 enc:v1:...>", model: glm-5.3-flash }
+  # 员工专属模型（2026-09-06 一人一模型一 key）不在 yaml 配——控制台「数字员工」页按员工档案
+  #   维护 model 段（baseUrl/apiKey/model/api，apiKey 支持 enc:v1 密文），绑定后该员工的执行
+  #   调用走专属路由（callType=code 尾部覆盖，未绑定员工用全局 routes 零变化）
+
+workspaceRoot: ./workspace   # 员工工作区根（per-employee/task 隔离目录）
+sessionsRoot: ./sessions     # session 落盘根（per-employee 隔离）
+
+# API 鉴权（可选，2026-09-11 P0 安全批）：tokens 非空即启用——所有 /api/* 请求须带
+# `Authorization: Bearer <token>`（SSE 等无法设头的场景用 `?token=`）；
+# 匹配即以 name 作为 operator 注入请求上下文（intervention/config_change 留痕「谁操作的」）。
+# 前端首次访问弹 token 录入框（存 localStorage）。缺省不配 = 鉴权关闭（内网可接受，生产必须配置；
+# doctor 巡检项「API 鉴权」兜底提醒）。token 支持 enc:v1: 密文。
+# 签发命令（2026-09-11）：`node cli.ts token <操作者名> [--yaml <本文件路径>]`——
+# 生成 ddw- 明文令牌 + enc:v1 密文 yaml 行，--yaml 顺带写入 auth.tokens（重启生效）。
+# 分发给使用者的是 ddw- 开头的明文令牌，不是 enc:v1: 密文（密文录入恒 401）。
+# auth:
+#   tokens:
+#     - { name: 张三, token: "enc:v1:..." }
+#     - { name: 李四, token: "<明文 或 enc:v1:...>" }
+# 监听收口（可选）：缺省全网卡；反代/前端同机部署时收口回环，杜绝内网直连绕过反代
+# bindHost: 127.0.0.1
+# 安全 strict 模式（可选，2026-09-11）：true 时启动前置检查——未配 auth 段或 bindHost 直接拒绝启动
+# （生产部署建议开启；缺省 false = 仅 ERROR 横幅警示，内网试跑零回归）
+# strictMode: true
+
+tickIntervalMs: 5000         # 调度 tick 间隔（缺省 5s）
+maxTurns: 100                # 每任务最大对话轮数（缺省 40）：达到上限任务以 max_turns 终态优雅退出
+retryPerItem: 0              # 计划模式每项失败自动重试次数（缺省 0 = 失败即停）；重试留痕进事件流
+bashWhitelist: [git, node, npm, npx, python3]   # 受控 bash 白名单（首 token，缺省同此）
+# 任务级看门狗（可选，2026-09-11）：running 超过此时长 → failed「任务超时」+ 释放员工占用，
+# fork 模式同时 kill 子进程（TERM → 5s → KILL）；挂审待放行任务 4 倍宽限；缺省 = 关闭
+# taskTimeoutMs: 7200000
+# 磁盘治理（可选，2026-09-11 P1 治理批）：done/failed 任务 workspace/session 目录按 mtime TTL
+# 清扫（启动即扫 + 每小时巡检；审计链 ddw_events 一条不删）；0/缺省 = 关闭。
+# 活跃任务安全：执行期间目录 mtime 恒新，且看门狗保证执行最长 taskTimeoutMs
+# retention:
+#   workspaceDays: 7
+
+# 控制台外链（可选）：通知消息中的任务直达链接前缀，如 http://console.internal:5173
+# 注意：consoleUrl 当前仅代码装配可配（startConsoleServer 的 runtime.consoleUrl），
+# yaml 层未透传——本段仅作占位说明，取消注释不会生效
+# consoleUrl: ""
+
+# 发布部署（可选）：devops 能力项依赖本段；本版范围 = 产物复制到目标目录 + 执行重启命令
+# deploy:
+#   envs:
+#     - name: test                       # 任务项 detail 中引用的环境名
+#       artifactDir: /opt/ddw/web-app    # 产物目标目录
+#       restartCommand: "bash /opt/ddw/restart.sh"   # 发布后执行（重启服务/脚本）
+#       artifactPath: dist               # 员工工作区内产物相对路径（缺省 dist）
+#       # host: 127.0.0.1                # 配了走 ssh（scp/ssh exec），缺省本机直拷
+#       # user: root
+
+# 存储配置（可选，存储企业化 2026-09-08）：缺省 sqlite（`<data>/ddw.sqlite`）；--store 参数已退役。
+# driver: sqlite | mysql；driver=mysql 时 host/user/database 必填（password 支持 enc:v1: 密文）
+# storage:
+#   driver: mysql                 # sqlite（缺省）| mysql
+#   mysql:
+#     host: 127.0.0.1
+#     port: 3306                  # 缺省 3306
+#     user: ddw
+#     password: "<明文 或 enc:v1:...>"   # 密文用 `pnpm --filter console-api exec node dist/cli.js cred enc <明文>` 生成（主密钥 DDW_CRED_KEY）
+#     database: ddw
+#     connectionLimit: 10         # 连接池上限（可选，2026-09-11）：缺省 10；池韧性参数（建连超时/keepalive/空闲回收）已内建
+#   # sqlite 段（driver: sqlite 时可选）：覆盖缺省库文件路径
+#   # sqlite:
+#   #   path: /data/ddw/ddw.sqlite
+
+# 企业内部机器人通知（可选，yanxun 渠道类型示例——对接企业自有 sendRobotText 风格机器人接口时参照）：
+# 配置后「通知渠道」页可建 type=yanxun 渠道（配置机器人 access_token），任务消息推送到 sendRobotTex；
+# appCode 传任务员工 id，tranDate/tranTime/consumerSeqNo/orgConsumerSeqNo 发送时自动生成（R0251+日期+时间+16位随机）；
+# isAtAll 是否 @所有人（全局配置，页面上不配；缺省 '0'）
+# yanxun:
+#   apiUrl: http://im-robot.example.internal:8199/api/message/sendRobotText
+#   requestHead:
+#     serviceCode: "50022000009"
+#     serviceScene: "11"
+#     lglBrId: "001"
+#     consumerId: "0251"
+#     orgConsumerId: "0251"
+#     channelTyp: "CH0540"
+#     filFlg: "0"
+#   # isAtAll: true   # 需要通知 @所有人时打开；缺省 false（报文 '0'）

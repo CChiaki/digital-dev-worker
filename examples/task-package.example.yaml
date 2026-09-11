@@ -1,0 +1,27 @@
+# 数字员工任务包样例：控制台固化后由数字员工接单执行
+taskId: TASK-2026-0912-001
+title: 登录模块前端重构
+repo:
+  url: http://gitlab.inner.bank/frontend/web-app.git
+  branch: feature/login-refactor
+  baseBranch: develop
+tasks:
+  - id: T-1
+    title: 登录页组件拆分
+    files:
+      - src/views/login/index.vue
+      - src/views/login/components/LoginForm.vue
+    requirement: 将登录页拆分为表单子组件，逻辑保持不变
+    acceptance:
+      - npm run build 通过
+      - 现有登录 e2e 用例全绿
+  - id: T-2
+    title: 登录接口联调
+    files:
+      - src/api/auth.ts
+    requirement: 按 apiDocs 对接新登录接口
+    acceptance:
+      - 联调用例通过
+apiDocs: http://gitlab.inner.bank/api-docs/auth.md
+codingStandard: 遵循仓库 ESLint 配置与团队 Vue 规范
+reportChannel: 完成后在 MR 描述附 Jira 单号，并将 Jira 单流转到「待测试」

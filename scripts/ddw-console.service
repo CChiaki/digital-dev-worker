@@ -1,0 +1,27 @@
+# 数字AI研发人员 · 控制台服务 systemd 单元样例（P15-T2）
+# 试点机部署位置：/etc/systemd/system/ddw-console.service
+# 使用：改路径/用户后  systemctl daemon-reload && systemctl enable --now ddw-console
+# 主密钥注入：Environment= 行（推荐用 EnvironmentFile=/etc/ddw/env 持久化，权限 600）
+# 注意：一体化模式（--runtime）才有数字员工执行；纯控制台模式去掉 --runtime 参数。
+
+[Unit]
+Description=数字AI研发人员 控制台（研发一体化运行时）
+After=network.target
+
+[Service]
+Type=simple
+User=ddw
+Group=ddw
+WorkingDirectory=/opt/ddw
+# 主密钥（凭据解密用）：echo 'DDW_CRED_KEY=<key>' > /etc/ddw/env && chmod 600 /etc/ddw/env
+EnvironmentFile=/etc/ddw/env
+ExecStart=/usr/bin/node packages/console-api/src/cli.ts --port 3100 --data /opt/ddw/data --runtime examples/console-runtime.example.yaml
+Restart=on-failure
+RestartSec=5
+# 硬化：只写数据目录，其余只读
+ReadWritePaths=/opt/ddw/data
+ProtectSystem=strict
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
